@@ -23,14 +23,14 @@ client = tweepy.Client(
     access_token_secret=ACCESS_SECRET
 )
 
-# 🔹 Configuration de OpenAI
+# 🔹 Configuration de OpenAI avec la nouvelle syntaxe
 openai.api_key = OPENAI_API_KEY
 
-# 🔹 Fonction pour générer un tweet sarcastique avec OpenAI GPT-4
+# 🔹 Fonction pour générer un tweet sarcastique avec OpenAI GPT-4 (nouvelle syntaxe)
 def generate_tweet():
     prompt = "Génère un tweet sarcastique et drôle sur un sujet d'actualité en moins de 280 caractères."
-    
-    response = openai.ChatCompletion.create(
+
+    response = openai.chat.completions.create(  # 🔹 Nouvelle syntaxe pour OpenAI v1.0+
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}]
     )
