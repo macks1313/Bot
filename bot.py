@@ -3,6 +3,10 @@ import openai
 import os
 import time
 import random
+import warnings
+
+# Ignorer les avertissements non critiques
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 # 🔹 Récupérer les clés API depuis les variables d'environnement Heroku
 API_KEY = os.getenv("API_KEY")
@@ -46,13 +50,16 @@ def generate_tweet():
         "Avoid crossing into offensive or explicit territory. Make it under 270 characters and with emoji."
     )
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    # Accéder correctement au contenu dans la version >= 1.0.0
-    full_content = response['choices'][0]['message']['content'].strip()
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        # Accéder correctement au contenu dans la version >= 1.0.0
+        full_content = response['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        print(f"❌ Erreur lors de la génération du tweet : {e}")
+        return ""
 
     # Prendre uniquement la première idée générée
     first_tweet = full_content.split("\n")[0]
@@ -61,4 +68,25 @@ def generate_tweet():
     if len(first_tweet) > 270:
         first_tweet = first_tweet[:267] + "..."
 
-    # 🔹 Ajouter un hashtag al
+    # 🔹 Ajouter un hashtag aléatoire
+    hashtag = random.choice(popular_hashtags)
+    tweet_with_hashtag = f"{first_tweet} {hashtag}"
+
+    return tweet_with_hashtag
+
+# 🔹 Fonction pour poster un tweet
+def post_tweet():
+    try:
+        tweet = generate_tweet()
+        if not tweet:
+            print("❌ Aucun tweet généré.")
+            return
+        response = client.create_tweet(text=tweet)
+        print(f"✅ Tweet envoyé : {tweet}, ID: {response.data['id']}")
+    except Exception as e:
+        print(f"❌ Erreur lors de l'envoi du tweet : {e}")
+
+# 🔹 Boucle pour tweeter toutes les 2 heures
+while True:
+    post_tweet()
+    time.sleep(7200)  # 2 heures
