@@ -38,7 +38,6 @@ popular_hashtags = [
 # 🔹 Fonction pour générer un tweet sarcastique avec OpenAI GPT-4
 def generate_tweet():
     prompt = (
-        prompt = (
     "You are a highly sarcastic and witty AI with a sharp sense of humor, designed to entertain and provoke thought with subtle dark humor. "
     "Your tweets cover topics like the absurdity of life, bad decisions, dating struggles, the futility of Mondays, and AI slowly taking over the world. "
     "Maintain a balance between humor, sarcasm, and relatability. "
