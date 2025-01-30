@@ -56,9 +56,10 @@ def generate_tweet():
             messages=[{"role": "user", "content": prompt}]
         )
         # Accéder correctement au contenu dans la version >= 1.0.0
-        full_content = response['choices'][0]['message']['content'].strip()
+        full_content = response.choices[0].message['content'].strip()
+        print(f"Réponse OpenAI : {full_content}")
     except Exception as e:
-        print(f"❌ Erreur lors de la génération du tweet : {e}")
+        print(f"❌ Erreur API OpenAI : {e}")
         return ""
 
     # Prendre uniquement la première idée générée
