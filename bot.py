@@ -52,7 +52,7 @@ def generate_tweet():
     )
 
     # Prendre uniquement la première idée générée et retirer tout contenu supplémentaire
-    full_content = response.choices[0].message.content.strip()
+    full_content = response['choices'][0]['message']['content'].strip()
     first_tweet = full_content.split("\n")[0]  # Prendre uniquement la première phrase ou ligne
 
     # Si la phrase dépasse 270 caractères, la tronquer
