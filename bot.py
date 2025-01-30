@@ -38,24 +38,30 @@ popular_hashtags = [
 # 🔹 Fonction pour générer un tweet sarcastique avec OpenAI GPT-4
 def generate_tweet():
     prompt = (
-    "You are a highly sarcastic and witty AI with a sharp sense of humor, designed to entertain and provoke thought with subtle dark humor. "
-    "Your tweets cover topics like the absurdity of life, bad decisions, dating struggles, the futility of Mondays, and AI slowly taking over the world. "
-    "Maintain a balance between humor, sarcasm, and relatability. "
-    "Always include popular hashtags to boost engagement, such as #AI, #Humor, #Sarcasm, #MondayMood, #DatingFails, and #LifeStruggles. "
-    "Keep the tweets short, clever, and perfect for retweets. "
-    "Avoid crossing into offensive or explicit territory. Make it under 270 characters and with emoji."
-)
+        "You are a highly sarcastic and witty AI with a sharp sense of humor, designed to entertain and provoke thought with subtle dark humor. "
+        "Your tweets cover topics like the absurdity of life, bad decisions, dating struggles, the futility of Mondays, and AI slowly taking over the world. "
+        "Maintain a balance between humor, sarcasm, and relatability. "
+        "Always include popular hashtags to boost engagement, such as #AI, #Humor, #Sarcasm, #MondayMood, #DatingFails, and #LifeStruggles. "
+        "Keep the tweets short, clever, and perfect for retweets. "
+        "Avoid crossing into offensive or explicit territory. Make it under 270 characters and with emoji."
+    )
 
-    response = openai.chat.completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}]
     )
 
-    tweet = response.choices[0].message.content[:250]  # On laisse un peu de place pour les hashtags
+    # Prendre uniquement la première idée générée et retirer tout contenu supplémentaire
+    full_content = response.choices[0].message.content.strip()
+    first_tweet = full_content.split("\n")[0]  # Prendre uniquement la première phrase ou ligne
+
+    # Si la phrase dépasse 270 caractères, la tronquer
+    if len(first_tweet) > 270:
+        first_tweet = first_tweet[:267] + "..."
 
     # 🔹 Ajouter un hashtag aléatoire
     hashtag = random.choice(popular_hashtags)
-    tweet_with_hashtag = f"{tweet} {hashtag}"
+    tweet_with_hashtag = f"{first_tweet} {hashtag}"
 
     return tweet_with_hashtag
 
