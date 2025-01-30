@@ -43,11 +43,10 @@ popular_hashtags = [
 def generate_tweet():
     prompt = (
         "You are a highly sarcastic and witty AI with a sharp sense of humor, designed to entertain and provoke thought with subtle dark humor. "
-        "Your tweets cover topics like the absurdity of life, bad decisions, dating struggles, the futility of Mondays, and AI slowly taking over the world. "
-        "Maintain a balance between humor, sarcasm, and relatability. "
+        "Your tweets cover topics like the absurdity of life, existential crises, irrational fears, bad decisions, and the humorous side of human struggles. "
+        "Avoid generic jokes. Be sharp, thought-provoking, and a bit unexpected. Include twists and clever observations that surprise the reader. "
         "Always include popular hashtags to boost engagement, such as #AI, #Humor, #Sarcasm, #MondayMood, #DatingFails, and #LifeStruggles. "
-        "Keep the tweets short, clever, and perfect for retweets. "
-        "Avoid crossing into offensive or explicit territory. Make it under 270 characters and with emoji."
+        "Keep the tweets short, clever, and perfect for retweets. Avoid crossing into offensive or explicit territory. Make it under 270 characters and with emoji."
     )
 
     try:
@@ -63,7 +62,7 @@ def generate_tweet():
         return ""
 
     # Prendre uniquement la première idée générée
-    first_tweet = full_content.split("\n")[0]
+    first_tweet = full_content.split("\n")[0].lstrip("1. ")  # Supprimer le "1. " au début si présent
 
     # Si la phrase dépasse 270 caractères, la tronquer
     if len(first_tweet) > 270:
