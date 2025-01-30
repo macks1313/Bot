@@ -56,8 +56,11 @@ def generate_tweet():
             messages=[{"role": "user", "content": prompt}]
         )
         # Correctement accéder au contenu dans la version >= 1.0.0
-        full_content = response['choices'][0]['message'].get('content', '').strip()
+        full_content = response['choices'][0]['message']['content'].strip()
         print(f"Réponse OpenAI : {full_content}")
+    except openai.error.InvalidRequestError as e:
+        print(f"❌ Erreur de requête OpenAI : {e}")
+        return ""
     except AttributeError as e:
         print(f"❌ Erreur liée à l'accès des données de l'API OpenAI : {e}")
         return ""
