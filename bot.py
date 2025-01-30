@@ -55,7 +55,7 @@ def generate_tweet():
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}]
         )
-        # Accéder correctement au contenu dans la version >= 1.0.0
+        # Correctement accéder au contenu dans la version >= 1.0.0
         full_content = response.choices[0].message['content'].strip()
         print(f"Réponse OpenAI : {full_content}")
     except Exception as e:
