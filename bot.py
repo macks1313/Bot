@@ -51,30 +51,14 @@ def generate_tweet():
         messages=[{"role": "user", "content": prompt}]
     )
 
-    # Prendre uniquement la première idée générée et retirer tout contenu supplémentaire
+    # Accéder correctement au contenu dans la version >= 1.0.0
     full_content = response['choices'][0]['message']['content'].strip()
-    first_tweet = full_content.split("\n")[0]  # Prendre uniquement la première phrase ou ligne
+
+    # Prendre uniquement la première idée générée
+    first_tweet = full_content.split("\n")[0]
 
     # Si la phrase dépasse 270 caractères, la tronquer
     if len(first_tweet) > 270:
         first_tweet = first_tweet[:267] + "..."
 
-    # 🔹 Ajouter un hashtag aléatoire
-    hashtag = random.choice(popular_hashtags)
-    tweet_with_hashtag = f"{first_tweet} {hashtag}"
-
-    return tweet_with_hashtag
-
-# 🔹 Fonction pour poster un tweet
-def post_tweet():
-    try:
-        tweet = generate_tweet()
-        response = client.create_tweet(text=tweet)
-        print(f"✅ Tweet envoyé : {tweet}, ID: {response.data['id']}")
-    except Exception as e:
-        print(f"❌ Erreur lors de l'envoi du tweet : {e}")
-
-# 🔹 Boucle pour tweeter toutes les 2 heures
-while True:
-    post_tweet()
-    time.sleep(7200)  # 2 heures
+    # 🔹 Ajouter un hashtag al
