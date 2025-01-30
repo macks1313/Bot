@@ -46,6 +46,7 @@ def generate_tweet():
     prompt = (
         "Write a sarcastic, slightly dark-humored and NSFW-friendly joke about a trending topic."
         "Make it under 280 characters and add a popular hashtag at the end."
+    )
 # Fonction pour générer un tweet avec humour sarcastique et adulte
 def generate_tweet(topic="daily life or technology"):
     personality = """
