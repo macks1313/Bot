@@ -3,7 +3,7 @@ import tweepy
 import openai
 import time
 
-# Récupérer les clés API depuis les variables d'environnement (Config Vars)
+# Récupérer les clés API depuis les variables d'environnement
 API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
@@ -18,21 +18,19 @@ api = tweepy.API(auth)
 # Authentification OpenAI
 openai.api_key = OPENAI_API_KEY
 
-# Fonction pour générer un tweet avec humour sarcastique et adulte
+# Fonction pour générer un tweet sarcastique avec la nouvelle API OpenAI
 def generate_tweet(topic="daily life or technology"):
-    personality = """
-    You are a highly sarcastic AI with an adult sense of humor. Your tweets are witty, provocative, and slightly dark. 
-    You joke about relationships, bad decisions, Mondays, AI taking over, and life's absurdity.
-    Keep it funny and sharp, but don't cross the line into offensive or explicit content.
-    """
-    prompt = f"{personality}\n\nWrite a sarcastic, funny tweet about {topic}:"
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
+    prompt = f"Write a sarcastic, funny tweet about {topic}."
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a highly sarcastic AI with an adult sense of humor."},
+            {"role": "user", "content": prompt}
+        ],
         max_tokens=60,
         temperature=0.85
     )
-    tweet = response.choices[0].text.strip()
+    tweet = response['choices'][0]['message']['content'].strip()
     return tweet
 
 # Fonction pour publier un tweet automatiquement
@@ -70,7 +68,7 @@ def main():
 
         # Répondre aux tweets d'un compte spécifique
         print("\nRéponse aux tweets spécifiques...")
-        target_username = "elonmusk"  # Exemple : compte cible
+        target_username = "elonmusk"
         keywords = ["AI", "Tesla", "SpaceX"]
         reply_to_tweets_with_keywords(target_username, keywords)
 
