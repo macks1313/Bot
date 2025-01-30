@@ -18,7 +18,7 @@ api = tweepy.API(auth)
 # Authentification OpenAI
 openai.api_key = OPENAI_API_KEY
 
-# Fonction pour générer un tweet sarcastique avec la nouvelle API OpenAI
+# Fonction pour générer un tweet sarcastique
 def generate_tweet(topic="daily life or technology"):
     prompt = f"Write a sarcastic, funny tweet about {topic}."
     response = openai.ChatCompletion.create(
@@ -39,8 +39,8 @@ def post_tweet():
     try:
         api.update_status(tweet)
         print(f"Tweet publié : {tweet}")
-    except tweepy.TweepError as e:
-        print(f"Erreur : {e}")
+    except tweepy.errors.TweepyException as e:
+        print(f"Erreur lors de la publication : {e}")
 
 # Fonction pour répondre automatiquement aux tweets spécifiques
 def reply_to_tweets_with_keywords(target_username, keywords):
@@ -54,8 +54,8 @@ def reply_to_tweets_with_keywords(target_username, keywords):
                     in_reply_to_status_id=tweet.id
                 )
                 print(f"Réponse publiée : {response}")
-    except tweepy.TweepError as e:
-        print(f"Erreur : {e}")
+    except tweepy.errors.TweepyException as e:
+        print(f"Erreur lors de la réponse : {e}")
 
 # Fonction principale : Boucle pour publier toutes les 2 heures
 def main():
@@ -79,3 +79,4 @@ def main():
 # Lancer le script
 if __name__ == "__main__":
     main()
+
