@@ -1,2 +1,2 @@
-tweepy
-openai
+openai==0.27.8
+tweepy==4.12.1
