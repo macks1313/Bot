@@ -5,7 +5,6 @@ import logging
 import random
 import requests
 import tempfile
-from datetime import datetime, timezone
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,12 +17,7 @@ def main():
     TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-    # Check if current UTC hour is optimal (morning, noon, evening)
-    optimal_hours = [8, 12, 18]  # adjust as needed
-    current_hour = datetime.now(timezone.utc).hour
-    if current_hour not in optimal_hours:
-        logging.info("Not an optimal posting time. Exiting.")
-        return
+    logging.info("Startup: posting a tweet to demonstrate functionality.")
 
     # Initialize Twitter API
     auth = tweepy.OAuthHandler(TWITTER_API_KEY, TWITTER_API_SECRET)
