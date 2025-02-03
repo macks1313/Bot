@@ -3,8 +3,6 @@ import tweepy
 import openai
 import logging
 import random
-import requests
-import tempfile
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,14 +17,18 @@ def main():
 
     logging.info("Startup: posting a tweet to demonstrate functionality.")
 
-    # Initialisation de l'API Twitter via OAuth 1.1
+    # Initialisation de l'API Twitter (OAuth 1.1)
     auth = tweepy.OAuthHandler(API_KEY, API_SECRET)
     auth.set_access_token(ACCESS_TOKEN, ACCESS_SECRET)
     api = tweepy.API(auth, wait_on_rate_limit=True)
 
     # Récupération des tendances pour les États-Unis (WOEID 23424977)
     try:
-        trends_result = api.trends_place(23424977)
+        # Tweepy peut proposer get_place_trends si trends_place n'existe pas
+        if hasattr(api, "trends_place"):
+            trends_result = api.trends_place(23424977)
+        else:
+            trends_result = api.get_place_trends(23424977)
         trends = trends_result[0]['trends']
         trend_list = [t['name'] for t in trends if t['name'].startswith('#')]
         if not trend_list:
@@ -46,38 +48,28 @@ def main():
     trends_str = ", ".join(trend_list[:3]) if trend_list else ""
     prompt = chosen_template.format(trends=trends_str)
 
-    # Génération du tweet avec OpenAI
+    # Génération du tweet avec OpenAI (utilisation de gpt-3.5-turbo)
     openai.api_key = OPENAI_API_KEY
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=60,
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a creative tweet generator."},
+                {"role": "user", "content": prompt}
+            ],
             temperature=0.8,
-            n=1
+            max_tokens=60
         )
-        tweet_text = response.choices[0].text.strip()
+        tweet_text = response.choices[0].message.content.strip()
     except Exception as e:
         logging.error(f"Error generating tweet: {e}")
         tweet_text = "Here's an inspiring tweet for you. #Inspiration"
 
-    # Téléchargement d'une image aléatoire depuis Unsplash pour augmenter l'engagement
-    media_ids = []
-    try:
-        image_url = "https://source.unsplash.com/random/800x600"
-        img_response = requests.get(image_url, timeout=10)
-        if img_response.status_code == 200:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
-                tmp_file.write(img_response.content)
-                tmp_file.flush()
-                media = api.media_upload(tmp_file.name)
-                media_ids.append(media.media_id_string)
-    except Exception as e:
-        logging.error(f"Error fetching or uploading image: {e}")
+    logging.info(f"Tweet text: {tweet_text}")
 
-    # Publication du tweet (avec image si disponible)
+    # Publication du tweet (texte uniquement, sans média)
     try:
-        api.update_status(status=tweet_text, media_ids=media_ids if media_ids else None)
+        api.update_status(status=tweet_text)
         logging.info("Tweet posted successfully.")
     except Exception as e:
         logging.error(f"Error posting tweet: {e}")
