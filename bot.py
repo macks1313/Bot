@@ -6,25 +6,25 @@ import random
 import requests
 import tempfile
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 
 def main():
-    # Load API keys from environment variables
-    TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
-    TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
-    TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-    TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+    # Chargement des clés API depuis les variables d'environnement
+    API_KEY = os.getenv("API_KEY")
+    API_SECRET = os.getenv("API_SECRET")
+    ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+    ACCESS_SECRET = os.getenv("ACCESS_SECRET")
+    BEARER_TOKEN = os.getenv("BEARER_TOKEN")  # Non utilisé ici
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
     logging.info("Startup: posting a tweet to demonstrate functionality.")
 
-    # Initialize Twitter API
-    auth = tweepy.OAuthHandler(TWITTER_API_KEY, TWITTER_API_SECRET)
-    auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
+    # Initialisation de l'API Twitter via OAuth 1.1
+    auth = tweepy.OAuthHandler(API_KEY, API_SECRET)
+    auth.set_access_token(ACCESS_TOKEN, ACCESS_SECRET)
     api = tweepy.API(auth, wait_on_rate_limit=True)
 
-    # Retrieve trending topics for the US (WOEID 23424977)
+    # Récupération des tendances pour les États-Unis (WOEID 23424977)
     try:
         trends_result = api.trends_place(23424977)
         trends = trends_result[0]['trends']
@@ -35,7 +35,7 @@ def main():
         logging.error(f"Error fetching trends: {e}")
         trend_list = []
 
-    # Define prompt templates in English
+    # Définition des templates de prompt en anglais
     templates = [
         "Compose an engaging tweet that shares an amazing fact and includes trending topics: {trends}. Add relevant hashtags.",
         "Write a witty and inspiring tweet with a motivational quote. Use trending topics: {trends} and add hashtags.",
@@ -46,7 +46,7 @@ def main():
     trends_str = ", ".join(trend_list[:3]) if trend_list else ""
     prompt = chosen_template.format(trends=trends_str)
 
-    # Generate tweet text using OpenAI
+    # Génération du tweet avec OpenAI
     openai.api_key = OPENAI_API_KEY
     try:
         response = openai.Completion.create(
@@ -61,7 +61,7 @@ def main():
         logging.error(f"Error generating tweet: {e}")
         tweet_text = "Here's an inspiring tweet for you. #Inspiration"
 
-    # Download a random image from Unsplash for enhanced engagement
+    # Téléchargement d'une image aléatoire depuis Unsplash pour augmenter l'engagement
     media_ids = []
     try:
         image_url = "https://source.unsplash.com/random/800x600"
@@ -75,7 +75,7 @@ def main():
     except Exception as e:
         logging.error(f"Error fetching or uploading image: {e}")
 
-    # Post the tweet (with media if available)
+    # Publication du tweet (avec image si disponible)
     try:
         api.update_status(status=tweet_text, media_ids=media_ids if media_ids else None)
         logging.info("Tweet posted successfully.")
