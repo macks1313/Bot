@@ -1,92 +1,65 @@
+import os
 import tweepy
 import openai
-import os
-import time
-import random
-import warnings
+import logging
 
-# Ignorer les avertissements non critiques
-warnings.filterwarnings("ignore", category=SyntaxWarning)
+# Configuration du logging
+logging.basicConfig(level=logging.INFO)
 
-# 🔹 Récupérer les clés API depuis les variables d'environnement Heroku
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-ACCESS_SECRET = os.getenv("ACCESS_SECRET")
-BEARER_TOKEN = os.getenv("BEARER_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+def main():
+    # Chargement des clés API depuis les variables d'environnement
+    TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
+    TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
+    TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+    TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# 🔹 Vérification des clés API
-if not API_KEY or not API_SECRET or not ACCESS_TOKEN or not ACCESS_SECRET or not BEARER_TOKEN or not OPENAI_API_KEY:
-    print("❌ Erreur : Une ou plusieurs clés API sont manquantes ! Vérifie les Config Vars sur Heroku.")
-    exit(1)
+    # Initialisation de l'API Twitter
+    auth = tweepy.OAuthHandler(TWITTER_API_KEY, TWITTER_API_SECRET)
+    auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
+    api = tweepy.API(auth, wait_on_rate_limit=True)
 
-# 🔹 Configuration de l’API Twitter v2 avec OAuth2
-client = tweepy.Client(
-    consumer_key=API_KEY,
-    consumer_secret=API_SECRET,
-    access_token=ACCESS_TOKEN,
-    access_token_secret=ACCESS_SECRET,
-    bearer_token=BEARER_TOKEN
-)
+    # Récupération des tendances mondiales (WOEID 1)
+    try:
+        trends_result = api.trends_place(1)
+        trends = trends_result[0]['trends']
+        # Extraction des hashtags ou, à défaut, des noms de tendance
+        trend_list = [t['name'] for t in trends if t['name'].startswith('#')]
+        if not trend_list:
+            trend_list = [t['name'] for t in trends]
+    except Exception as e:
+        logging.error(f"Erreur lors de la récupération des tendances : {e}")
+        trend_list = []
 
-# 🔹 Configuration de OpenAI
-openai.api_key = OPENAI_API_KEY
-
-# 🔹 Liste de hashtags populaires (change-les selon l'actualité si besoin)
-popular_hashtags = [
-    "#trending", "#viral", "#comedy", "#NSFW", "#joke", "#sarcasm", "#darkhumor",
-    "#funny", "#memes", "#fyp", "#WTF", "#epic", "#TwitterHumor"
-]
-
-# 🔹 Fonction pour générer un tweet sarcastique avec OpenAI GPT-4
-def generate_tweet():
+    # Création du prompt pour générer un tweet engageant
     prompt = (
-        "You are a highly sarcastic and witty AI with a sharp sense of humor, designed to entertain and provoke thought with subtle dark humor. "
-        "Your tweets cover topics like the absurdity of life, existential crises, irrational fears, bad decisions, and the humorous side of human struggles. "
-        "Avoid generic jokes. Be sharp, thought-provoking, and a bit unexpected. Include twists and clever observations that surprise the reader. "
-        "Always include popular hashtags to boost engagement, such as #AI, #Humor, #Sarcasm, #MondayMood, #DatingFails, and #LifeStruggles. "
-        "Keep the tweets short, clever, and perfect for retweets. Avoid crossing into offensive or explicit territory. Make it under 270 characters and with emoji."
+        "Rédige un tweet original, court et percutant en français, "
+        "intégrant un fait étonnant, une citation inspirante ou une référence tendance. "
+        f"Utilise les tendances suivantes si possible : {', '.join(trend_list[:3])}. "
+        "Ajoute des hashtags pertinents."
     )
 
+    # Initialisation de l'API OpenAI et génération du contenu
+    openai.api_key = OPENAI_API_KEY
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=prompt,
+            max_tokens=60,
+            temperature=0.8,
+            n=1
         )
-        # Correctement accéder au contenu dans la version >= 1.0.0
-        full_content = response['choices'][0]['message']['content'].strip()
-        print(f"Réponse OpenAI : {full_content}")
+        tweet_text = response.choices[0].text.strip()
     except Exception as e:
-        print(f"❌ Erreur API OpenAI : {e}")
-        return ""
+        logging.error(f"Erreur lors de la génération du tweet : {e}")
+        tweet_text = "Voici un tweet automatique pour partager une pensée positive. #Inspiration"
 
-    # Prendre uniquement la première idée générée
-    first_tweet = full_content.split("\n")[0].lstrip("1. ")  # Supprimer le "1. " au début si présent
-
-    # Si la phrase dépasse 270 caractères, la tronquer
-    if len(first_tweet) > 270:
-        first_tweet = first_tweet[:267] + "..."
-
-    # 🔹 Ajouter un hashtag aléatoire
-    hashtag = random.choice(popular_hashtags)
-    tweet_with_hashtag = f"{first_tweet} {hashtag}"
-
-    return tweet_with_hashtag
-
-# 🔹 Fonction pour poster un tweet
-def post_tweet():
+    # Publication du tweet sur Twitter
     try:
-        tweet = generate_tweet()
-        if not tweet:
-            print("❌ Aucun tweet généré.")
-            return
-        response = client.create_tweet(text=tweet)
-        print(f"✅ Tweet envoyé : {tweet}, ID: {response.data['id']}")
+        api.update_status(tweet_text)
+        logging.info("Tweet publié avec succès.")
     except Exception as e:
-        print(f"❌ Erreur lors de l'envoi du tweet : {e}")
+        logging.error(f"Erreur lors de la publication du tweet : {e}")
 
-# 🔹 Boucle pour tweeter toutes les 2 heures
-while True:
-    post_tweet()
-    time.sleep(7200)  # 2 heures
+if __name__ == "__main__":
+    main()
