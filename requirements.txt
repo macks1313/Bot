@@ -3,3 +3,4 @@ tweepy==4.12.1
 importlib-metadata==6.0.0
 requests
 schedule
+python-dotenv
