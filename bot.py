@@ -3,7 +3,7 @@
 
 """
 Bot Twitter automatisé pour promouvoir un compte OnlyFans avec l'aide de l'API OpenAI.
-- Tweete 10 fois par jour à intervalles réguliers.
+- Tweete 10 fois par jour à intervalles réguliers (1 tweet environ toutes les 2h24).
 - Publie 2 tweets immédiatement au lancement.
 - Gère les erreurs et permet le redémarrage automatique.
 - Compatible Heroku/GitHub et utilisation des variables d'environnement.
@@ -28,7 +28,7 @@ ACCESS_SECRET = os.getenv("ACCESS_SECRET")
 # Clé OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Authentification Twitter via Tweepy
+# Authentification Twitter via Tweepy (API v1.1)
 auth = tweepy.OAuth1UserHandler(
     API_KEY,
     API_SECRET,
@@ -39,28 +39,30 @@ api = tweepy.API(auth)
 
 def generate_tweet():
     """
-    Génère un tweet engageant via l'API OpenAI (GPT).
+    Génère un tweet engageant via l'API OpenAI Chat (GPT-3.5).
     - Inclut une invitation à découvrir le compte OnlyFans.
     - Inclut un call-to-action et des hashtags pertinents.
     """
     prompt = (
         "Rédige un tweet court, percutant et intrigant pour promouvoir un compte OnlyFans. "
-        "N'oublie pas d'inclure un call-to-action, une invitation à découvrir le compte, et "
-        "les hashtags pertinents (#OnlyFans, #ExclusiveContent, #FollowMe)."
+        "Inclus un call-to-action, une invitation à découvrir le compte, et "
+        "des hashtags pertinents (#OnlyFans, #ExclusiveContent, #FollowMe)."
     )
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
+        # Utilisation de ChatCompletion (GPT-3.5)
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
             max_tokens=60,
-            temperature=0.7,
-            n=1
+            temperature=0.7
         )
-        return response.choices[0].text.strip()
+        # Récupère le contenu généré par GPT
+        tweet_text = response.choices[0].message.content.strip()
+        return tweet_text
     except Exception as e:
         print(f"Erreur OpenAI : {e}")
         # Message de secours en cas d'échec
-        return "Découvrez vite mon contenu exclusif sur OnlyFans ! #OnlyFans #ExclusiveContent #FollowMe"
+        return "Découvrez mon contenu exclusif sur OnlyFans ! #OnlyFans #ExclusiveContent #FollowMe"
 
 def send_tweet():
     """
@@ -83,7 +85,7 @@ def main():
     """
     # 1. Publie 2 tweets immédiatement
     send_tweet()
-    time.sleep(5)  # Petite pause pour éviter d'enchaîner trop vite
+    time.sleep(5)  # Petite pause pour éviter un enchaînement trop brutal
     send_tweet()
 
     # 2. Programme 10 tweets/jour => 1 tweet toutes les 2h24 (144 minutes)
@@ -96,7 +98,7 @@ def main():
             time.sleep(60)  # Vérifie les tâches chaque minute
         except Exception as e:
             print(f"Erreur imprévue : {e}")
-            time.sleep(60)  # Attend avant de retenter
+            time.sleep(60)  # Attend avant de réessayer
 
 if __name__ == "__main__":
     main()
